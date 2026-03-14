@@ -255,10 +255,10 @@ export default function Home() {
             className="mb-8 space-y-4 text-base leading-8 text-zinc-600"
           >
             <p>
-              I need at least{" "}
-              <strong className="text-zinc-900">10 creators</strong> to
-              launch this. The task: create a vlog of your life. Show the
-              real journey.
+              I&apos;ll not stop reaching out until I find the{" "}
+              <strong className="text-zinc-900">first 10 people</strong>{" "}
+              available to launch this. The task: create a vlog of your life.
+              Show the real journey.
             </p>
             <p>
               The only requirement is to mention or show{" "}
@@ -274,7 +274,9 @@ export default function Home() {
               <strong className="text-zinc-900">
                 founding face of a movement
               </strong>
-              .
+              . Once the first 10 videos are uploaded, this site will evolve
+              and invite everyone to participate in the contest and build
+              awareness.
             </p>
           </motion.div>
 
