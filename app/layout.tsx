@@ -9,9 +9,15 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "First People — A Billion-Dollar Project",
+  title: "Looking for a Co-founder — Andrea",
   description:
-    "A project about mental health, authentic connection, and the value of being alive. Looking for 10 creators to launch a movement.",
+    "A 21-year-old from Italy building something meaningful. Looking for a co-founder, a friend, a team.",
+  openGraph: {
+    title: "Looking for a Co-founder",
+    description:
+      "A 21-year-old from Italy building something meaningful. Looking for a co-founder, a friend, a team.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
