@@ -48,33 +48,39 @@ type Phase =
   | "done";
 
 const DOT_COLORS: Record<DotColor, string> = {
-  dim: "#1f2937",
+  dim: "#2a2a2a",
   red: "#ef4444",
   crimson: "#991b1b",
   amber: "#f59e0b",
   bright: "#ffffff",
 };
 
+const INITIAL_DOTS: Dot[] = Array.from({ length: 100 }, () => ({
+  visible: false,
+  color: "dim" as DotColor,
+}));
+
 export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
-  const [dots, setDots] = useState<Dot[]>(
-    Array.from({ length: 100 }, () => ({ visible: false, color: "dim" as DotColor }))
-  );
+  const [dots, setDots] = useState<Dot[]>(INITIAL_DOTS);
   const [phase, setPhase] = useState<Phase>("appearing");
   const phaseRef = useRef<Phase>("appearing");
   const nextHighlightRef = useRef(0);
   const canAdvanceRef = useRef(false);
 
-  // Phase 1: dots appear one by one
+  // Phase 1: dots appear one by one, click fires exactly as each dot appears
   useEffect(() => {
     if (phase !== "appearing") return;
     let i = 0;
     const id = setInterval(() => {
+      const dotIndex = i; // capture for closure
       setDots((prev) => {
-        const next = [...prev];
-        next[i] = { ...next[i], visible: true };
+        const next = prev.map((d, idx) =>
+          idx === dotIndex ? { ...d, visible: true } : d
+        );
         return next;
       });
-      if (i % 4 === 0) playOneShot("/sounds/click.wav", 0.18);
+      // click sound fires in sync with this exact dot appearing
+      playOneShot("/sounds/click.wav", 0.22);
       i++;
       if (i >= 100) {
         clearInterval(id);
@@ -82,13 +88,13 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
           setPhase("intro");
           phaseRef.current = "intro";
           canAdvanceRef.current = true;
-        }, 700);
+        }, 800);
       }
-    }, 30);
+    }, 38);
     return () => clearInterval(id);
   }, [phase]);
 
-  // Phase 3+: light up dots for each stat
+  // Stats: light up dots one by one with click sound
   useEffect(() => {
     if (!phase.startsWith("stat-")) return;
     const statIdx = parseInt(phase.split("-")[1]);
@@ -101,23 +107,23 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
         clearInterval(id);
         setTimeout(() => {
           canAdvanceRef.current = true;
-        }, 600);
+        }, 500);
         return;
       }
       setDots((prev) => {
         const next = [...prev];
         for (let i = nextHighlightRef.current; i < 100; i++) {
           if (next[i].color === "dim" && next[i].visible) {
-            next[i] = { ...next[i], color: stat.color };
+            next[i] = { visible: true, color: stat.color };
             nextHighlightRef.current = i + 1;
             lit++;
-            playOneShot("/sounds/click.wav", 0.12);
+            playOneShot("/sounds/click.wav", 0.14);
             break;
           }
         }
         return next;
       });
-    }, 55);
+    }, 60);
 
     return () => clearInterval(id);
   }, [phase]);
@@ -150,35 +156,48 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
 
   return (
     <div
-      className="w-full h-full bg-[#060606] flex flex-col items-center justify-center px-6 cursor-pointer select-none"
+      className="w-full h-full bg-[#060606] flex flex-col items-center justify-center cursor-pointer select-none"
+      style={{ padding: "clamp(1rem, 4vw, 3rem)" }}
       onClick={phase !== "appearing" ? advancePhase : undefined}
     >
-      {/* Dots grid */}
+      {/* Dots grid — fixed 10×10, sized to always fit on screen */}
       <div
-        className="grid gap-[6px] mb-10"
-        style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(10, 1fr)",
+          gap: "clamp(4px, 1.2vw, 10px)",
+          marginBottom: "clamp(1.5rem, 4vh, 3rem)",
+        }}
       >
         {dots.map((dot, i) => (
           <motion.div
             key={i}
-            initial={{ scale: 0, opacity: 0 }}
             animate={{
               scale: dot.visible ? 1 : 0,
               opacity: dot.visible ? 1 : 0,
               backgroundColor: DOT_COLORS[dot.color],
             }}
+            initial={{ scale: 0, opacity: 0 }}
             transition={{
-              scale: { duration: 0.18, ease: "backOut" },
-              backgroundColor: { duration: 0.3 },
-              opacity: { duration: 0.18 },
+              scale: { duration: 0.14, ease: "backOut" },
+              opacity: { duration: 0.14 },
+              backgroundColor: { duration: 0.25 },
             }}
-            className="w-5 h-5 md:w-6 md:h-6 rounded-full"
+            style={{
+              width: "clamp(16px, 4vw, 28px)",
+              height: "clamp(16px, 4vw, 28px)",
+              borderRadius: "50%",
+              backgroundColor: DOT_COLORS[dot.color],
+            }}
           />
         ))}
       </div>
 
       {/* Text area */}
-      <div className="h-24 flex flex-col items-center justify-center">
+      <div
+        style={{ minHeight: "clamp(5rem, 12vh, 8rem)" }}
+        className="flex flex-col items-center justify-center"
+      >
         <AnimatePresence mode="wait">
           {phase === "intro" && (
             <motion.div
@@ -192,7 +211,7 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
               <p className="text-white text-2xl md:text-3xl font-semibold mb-1">
                 Here are 100 people.
               </p>
-              <p className="text-white/30 text-xs tracking-widest uppercase mt-3">
+              <p className="text-white/30 text-xs tracking-widest uppercase mt-4">
                 tap to continue
               </p>
             </motion.div>
@@ -207,7 +226,7 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <p className="text-white text-2xl md:text-3xl font-bold mb-1">
+              <p className="text-white text-2xl md:text-3xl font-bold mb-2">
                 {currentStat.headline}
               </p>
               <p className="text-white/55 text-base md:text-lg font-light">

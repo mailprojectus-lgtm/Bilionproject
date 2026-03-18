@@ -8,10 +8,21 @@ export default function BillionScene({ onAdvance }: { onAdvance: () => void }) {
   const [noScale, setNoScale] = useState(1);
   const [moveCount, setMoveCount] = useState(0);
   const noRef = useRef<HTMLButtonElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const showBeReal = moveCount >= 2;
   const noGone = noScale < 0.12;
+
+  const moveNoButton = useCallback(() => {
+    if (noGone) return;
+    const maxX = window.innerWidth * 0.38;
+    const maxY = window.innerHeight * 0.28;
+    setNoPos({
+      x: (Math.random() - 0.5) * maxX * 2,
+      y: (Math.random() - 0.5) * maxY * 2,
+    });
+    setNoScale((s) => Math.max(s * 0.82, 0.08));
+    setMoveCount((c) => c + 1);
+  }, [noGone]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -22,25 +33,13 @@ export default function BillionScene({ onAdvance }: { onAdvance: () => void }) {
       const cy = rect.top + rect.height / 2;
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < 130) {
-        const maxX = (window.innerWidth * 0.4);
-        const maxY = (window.innerHeight * 0.3);
-        setNoPos({
-          x: (Math.random() - 0.5) * maxX * 2,
-          y: (Math.random() - 0.5) * maxY * 2,
-        });
-        setNoScale((s) => Math.max(s * 0.82, 0.08));
-        setMoveCount((c) => c + 1);
-      }
+      if (Math.sqrt(dx * dx + dy * dy) < 130) moveNoButton();
     },
-    [noGone]
+    [noGone, moveNoButton]
   );
 
   return (
     <div
-      ref={containerRef}
       className="w-full h-full bg-white flex flex-col items-center justify-center relative overflow-hidden"
       onMouseMove={handleMouseMove}
     >
@@ -53,7 +52,8 @@ export default function BillionScene({ onAdvance }: { onAdvance: () => void }) {
         <p className="text-black/40 text-xl md:text-2xl mb-3 tracking-wide font-light">
           Would you like
         </p>
-        <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-black leading-none tracking-tight">
+        <h1 className="font-black text-black leading-none tracking-tight"
+            style={{ fontSize: "clamp(4rem, 14vw, 11rem)" }}>
           One Billion
           <br />
           Dollars?
@@ -81,17 +81,8 @@ export default function BillionScene({ onAdvance }: { onAdvance: () => void }) {
             ref={noRef}
             animate={{ x: noPos.x, y: noPos.y, scale: noScale }}
             transition={{ type: "spring", stiffness: 260, damping: 18 }}
-            onMouseEnter={() => {
-              const maxX = window.innerWidth * 0.4;
-              const maxY = window.innerHeight * 0.3;
-              setNoPos({
-                x: (Math.random() - 0.5) * maxX * 2,
-                y: (Math.random() - 0.5) * maxY * 2,
-              });
-              setNoScale((s) => Math.max(s * 0.82, 0.08));
-              setMoveCount((c) => c + 1);
-            }}
-            className="px-12 py-4 border-2 border-black text-black font-bold text-lg rounded-full select-none cursor-default"
+            onMouseEnter={moveNoButton}
+            className="px-12 py-4 border-2 border-black text-black font-bold text-lg rounded-full select-none"
             style={{ pointerEvents: noScale < 0.5 ? "none" : "auto" }}
           >
             No

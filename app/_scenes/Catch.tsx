@@ -22,20 +22,36 @@ export default function CatchScene({ onAdvance }: { onAdvance: () => void }) {
       className="w-full h-full relative overflow-hidden flex flex-col items-center justify-center cursor-pointer select-none"
       onClick={onAdvance}
     >
-      {/* Pulsing heartbeat background */}
+      {/* Slow, subtle heartbeat glow — much slower and more subtle */}
       <motion.div
         className="absolute inset-0"
         animate={{
           backgroundColor: [
             "#090909",
-            "#3b0a0a",
+            "#1a0505",
             "#090909",
-            "#290707",
+            "#140404",
             "#090909",
           ],
         }}
         transition={{
-          duration: 0.95,
+          duration: 2.8,
+          repeat: Infinity,
+          ease: "easeInOut",
+          times: [0, 0.28, 0.5, 0.72, 1],
+        }}
+      />
+
+      {/* Subtle radial glow in center */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(120,0,0,0.18) 0%, transparent 70%)",
+        }}
+        animate={{ opacity: [0, 1, 0, 0.7, 0] }}
+        transition={{
+          duration: 2.8,
           repeat: Infinity,
           ease: "easeInOut",
           times: [0, 0.28, 0.5, 0.72, 1],

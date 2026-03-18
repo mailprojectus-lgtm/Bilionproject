@@ -154,37 +154,13 @@ export default function Page() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 h-px bg-white/5 z-50">
+      {/* Progress bar — thicker */}
+      <div className="fixed top-0 left-0 right-0 h-[3px] bg-white/8 z-50">
         <motion.div
-          className="h-full bg-white/30"
+          className={`h-full ${currentKey === "billion" ? "bg-black/30" : "bg-white/40"}`}
           animate={{ width: `${((idx + 1) / SCENES.length) * 100}%` }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
-      </div>
-
-      {/* Scene dots nav */}
-      <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2.5">
-        {SCENES.map((s, i) => (
-          <button
-            key={s}
-            onClick={() => !SCROLL_BLOCKED.has(currentKey) && navigate(i - idx)}
-            aria-label={`Go to scene ${i + 1}`}
-            className="group flex items-center justify-end"
-          >
-            <motion.div
-              animate={{
-                width: i === idx ? 18 : 6,
-                height: 6,
-                opacity: i === idx ? 1 : 0.3,
-                backgroundColor:
-                  currentKey === "billion" ? "#000000" : "#ffffff",
-              }}
-              transition={{ duration: 0.3 }}
-              className="rounded-full"
-            />
-          </button>
-        ))}
       </div>
     </div>
   );

@@ -13,9 +13,9 @@ export default function WorthScene({ onAdvance }: { onAdvance: () => void }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 0.45, y: 0 }}
           transition={{ duration: 0.9, ease: "easeOut" }}
-          className="text-white text-xl md:text-2xl font-light mb-4 tracking-wide"
+          className="text-white text-xl md:text-2xl font-light mb-6 tracking-wide"
         >
-          Your tomorrow is worth at least
+          Waking up tomorrow is worth at least
         </motion.p>
 
         <motion.h1
@@ -27,22 +27,6 @@ export default function WorthScene({ onAdvance }: { onAdvance: () => void }) {
         >
           $1,000,000,000
         </motion.h1>
-
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ delay: 1.4, duration: 0.8, ease: "easeOut" }}
-          className="h-px bg-white/20 my-10 origin-left"
-        />
-
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          transition={{ delay: 1.8, duration: 1 }}
-          className="text-white text-sm tracking-widest uppercase"
-        >
-          waking up tomorrow.
-        </motion.p>
       </div>
     </div>
   );

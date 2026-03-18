@@ -7,25 +7,28 @@ const WORDS = ["Co-founder", "Coworker", "Friend", "A mate"];
 
 export default function HeroScene({ onAdvance }: { onAdvance: () => void }) {
   const [wordIdx, setWordIdx] = useState(0);
+  const [showCycle, setShowCycle] = useState(false);
+
+  // First show "Hi. I'm looking for a", then start cycling
+  useEffect(() => {
+    const t = setTimeout(() => setShowCycle(true), 2000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
+    if (!showCycle) return;
     const id = setInterval(() => {
       setWordIdx((i) => (i + 1) % WORDS.length);
     }, 2200);
     return () => clearInterval(id);
-  }, []);
+  }, [showCycle]);
 
   return (
     <div
       className="w-full h-full bg-[#070707] flex flex-col items-center justify-center cursor-pointer select-none"
       onClick={onAdvance}
     >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.2 }}
-        className="text-center px-8"
-      >
+      <div className="text-center px-8">
         <motion.p
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 0.45, y: 0 }}
@@ -46,23 +49,36 @@ export default function HeroScene({ onAdvance }: { onAdvance: () => void }) {
 
         <div className="h-20 md:h-28 flex items-center justify-center overflow-hidden">
           <AnimatePresence mode="wait">
-            <motion.span
-              key={wordIdx}
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -60, opacity: 0 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="text-5xl md:text-7xl font-extrabold text-white block tracking-tight"
-            >
-              {WORDS[wordIdx]}
-            </motion.span>
+            {!showCycle ? (
+              <motion.span
+                key="placeholder"
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -60, opacity: 0 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="text-5xl md:text-7xl font-extrabold text-white block tracking-tight"
+              >
+                {WORDS[0]}
+              </motion.span>
+            ) : (
+              <motion.span
+                key={wordIdx}
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -60, opacity: 0 }}
+                transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                className="text-5xl md:text-7xl font-extrabold text-white block tracking-tight"
+              >
+                {WORDS[wordIdx]}
+              </motion.span>
+            )}
           </AnimatePresence>
         </div>
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.3 }}
-          transition={{ delay: 2.5, duration: 1.5 }}
+          transition={{ delay: 3, duration: 1.5 }}
           className="mt-16 flex flex-col items-center gap-2"
         >
           <div className="w-px h-8 bg-white/30 animate-pulse" />
@@ -70,7 +86,7 @@ export default function HeroScene({ onAdvance }: { onAdvance: () => void }) {
             scroll
           </span>
         </motion.div>
-      </motion.div>
+      </div>
     </div>
   );
 }
