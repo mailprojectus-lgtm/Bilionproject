@@ -41,7 +41,7 @@ const SCROLL_BLOCKED = new Set<SceneKey>(["billion", "dots"]);
 
 const BG_COLORS: Record<SceneKey, string> = {
   hero: "#070707",
-  billion: "#ffffff",
+  billion: "#060606",
   catch: "#090909",
   worth: "#050505",
   eleven: "#080808",

@@ -19,26 +19,9 @@ const STEPS = [
     lines: ["I need a team."],
     sub: null,
     items: [
-      "Perfect Squeak App",
-      "Build the second idea — still secret.",
+      "A senior Full Stack dev — elite with React Native. To build something real, not a prototype.",
+      "A creative — into videography and content. To make this a social phenomenon.",
     ],
-  },
-  {
-    type: "plan",
-    lines: ["My plan:"],
-    sub: null,
-    items: [
-      "Rent a place somewhere in the world. One month.",
-      "Get a team. Make real connections.",
-      "Work outside. Work out. Run.",
-      "Work on a mission: to help others.",
-    ],
-  },
-  {
-    type: "offer",
-    lines: ["One month."],
-    sub: "I'll cover most expenses.",
-    extra: "In exchange? A connection. A startup share. An experience.",
   },
   {
     type: "cta",

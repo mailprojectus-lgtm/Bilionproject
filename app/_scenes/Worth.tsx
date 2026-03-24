@@ -1,8 +1,44 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
+const TARGET = 1_000_000_000;
+
+function formatDollars(n: number): string {
+  const s = Math.floor(n).toString();
+  return "$" + s.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 export default function WorthScene({ onAdvance }: { onAdvance: () => void }) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const duration = 2000; // ms
+    let startTime: number | null = null;
+    let raf: number;
+
+    function tick(now: number) {
+      if (!startTime) startTime = now;
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.floor(eased * TARGET));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    }
+
+    // Start after the subtitle fades in (~0.9s)
+    const timer = setTimeout(() => {
+      raf = requestAnimationFrame(tick);
+    }, 900);
+
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <div
       className="w-full h-full bg-[#050505] flex flex-col items-center justify-center cursor-pointer select-none"
@@ -19,13 +55,13 @@ export default function WorthScene({ onAdvance }: { onAdvance: () => void }) {
         </motion.p>
 
         <motion.h1
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.7, duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-          className="text-white font-black leading-none tracking-tighter"
-          style={{ fontSize: "clamp(3rem, 12vw, 9rem)" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          className="text-white font-black leading-none tracking-tighter tabular-nums"
+          style={{ fontSize: "clamp(2.8rem, 10vw, 8rem)" }}
         >
-          $1,000,000,000
+          {formatDollars(value)}
         </motion.h1>
       </div>
     </div>

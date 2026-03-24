@@ -55,31 +55,34 @@ const DOT_COLORS: Record<DotColor, string> = {
   bright: "#ffffff",
 };
 
-const INITIAL_DOTS: Dot[] = Array.from({ length: 100 }, () => ({
-  visible: false,
-  color: "dim" as DotColor,
-}));
+function makeDots(): Dot[] {
+  return Array.from({ length: 100 }, () => ({ visible: false, color: "dim" as DotColor }));
+}
 
 export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
-  const [dots, setDots] = useState<Dot[]>(INITIAL_DOTS);
+  const [dots, setDots] = useState<Dot[]>(makeDots);
   const [phase, setPhase] = useState<Phase>("appearing");
   const phaseRef = useRef<Phase>("appearing");
   const nextHighlightRef = useRef(0);
   const canAdvanceRef = useRef(false);
+  // Mirror of dots state — lets us read current value without stale closure issues
+  const dotsRef = useRef<Dot[]>(dots);
 
-  // Phase 1: dots appear one by one, click fires exactly as each dot appears
+  const applyDots = useCallback((next: Dot[]) => {
+    dotsRef.current = next;
+    setDots(next);
+  }, []);
+
+  // Phase 1: reveal dots one by one
   useEffect(() => {
     if (phase !== "appearing") return;
     let i = 0;
     const id = setInterval(() => {
-      const dotIndex = i; // capture for closure
-      setDots((prev) => {
-        const next = prev.map((d, idx) =>
-          idx === dotIndex ? { ...d, visible: true } : d
-        );
-        return next;
-      });
-      // click sound fires in sync with this exact dot appearing
+      const idx = i;
+      const next = dotsRef.current.map((d, j) =>
+        j === idx ? { ...d, visible: true } : d
+      );
+      applyDots(next);
       playOneShot("/sounds/click.wav", 0.22);
       i++;
       if (i >= 100) {
@@ -90,11 +93,11 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
           canAdvanceRef.current = true;
         }, 800);
       }
-    }, 38);
+    }, 18);
     return () => clearInterval(id);
-  }, [phase]);
+  }, [phase, applyDots]);
 
-  // Stats: light up dots one by one with click sound
+  // Stats: light up dots one by one — all side effects OUTSIDE setDots to avoid StrictMode double-call
   useEffect(() => {
     if (!phase.startsWith("stat-")) return;
     const statIdx = parseInt(phase.split("-")[1]);
@@ -105,53 +108,51 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
     const id = setInterval(() => {
       if (lit >= stat.count) {
         clearInterval(id);
-        setTimeout(() => {
-          canAdvanceRef.current = true;
-        }, 500);
+        setTimeout(() => { canAdvanceRef.current = true; }, 500);
         return;
       }
-      setDots((prev) => {
-        const next = [...prev];
-        for (let i = nextHighlightRef.current; i < 100; i++) {
-          if (next[i].color === "dim" && next[i].visible) {
-            next[i] = { visible: true, color: stat.color };
-            nextHighlightRef.current = i + 1;
-            lit++;
-            playOneShot("/sounds/click.wav", 0.14);
-            break;
-          }
+
+      // Find next dim visible dot using the ref (always current, no closure staleness)
+      const current = dotsRef.current;
+      let targetIdx = -1;
+      for (let i = nextHighlightRef.current; i < 100; i++) {
+        if (current[i].color === "dim" && current[i].visible) {
+          targetIdx = i;
+          break;
         }
-        return next;
-      });
+      }
+
+      if (targetIdx === -1) {
+        clearInterval(id);
+        canAdvanceRef.current = true;
+        return;
+      }
+
+      // Build new array and apply — no side effects inside setDots
+      const next = current.map((d, i) =>
+        i === targetIdx ? { visible: true, color: stat.color } : d
+      );
+      nextHighlightRef.current = targetIdx + 1;
+      lit++;
+      applyDots(next);
+      playOneShot("/sounds/click.wav", 0.14);
     }, 60);
 
     return () => clearInterval(id);
-  }, [phase]);
+  }, [phase, applyDots]);
 
   const advancePhase = useCallback(() => {
     if (!canAdvanceRef.current) return;
-    const order: Phase[] = [
-      "intro",
-      "stat-0",
-      "stat-1",
-      "stat-2",
-      "stat-3",
-      "done",
-    ];
+    const order: Phase[] = ["intro", "stat-0", "stat-1", "stat-2", "stat-3", "done"];
     const idx = order.indexOf(phaseRef.current);
     if (idx === -1) return;
-    if (idx === order.length - 1) {
-      onAdvance();
-      return;
-    }
+    if (idx === order.length - 1) { onAdvance(); return; }
     const next = order[idx + 1];
     phaseRef.current = next;
     setPhase(next);
   }, [onAdvance]);
 
-  const statIdx = phase.startsWith("stat-")
-    ? parseInt(phase.split("-")[1])
-    : -1;
+  const statIdx = phase.startsWith("stat-") ? parseInt(phase.split("-")[1]) : -1;
   const currentStat = statIdx >= 0 ? STATS[statIdx] : null;
 
   return (
@@ -160,7 +161,7 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
       style={{ padding: "clamp(1rem, 4vw, 3rem)" }}
       onClick={phase !== "appearing" ? advancePhase : undefined}
     >
-      {/* Dots grid — fixed 10×10, sized to always fit on screen */}
+      {/* 10×10 grid */}
       <div
         style={{
           display: "grid",
@@ -172,28 +173,27 @@ export default function DotsScene({ onAdvance }: { onAdvance: () => void }) {
         {dots.map((dot, i) => (
           <motion.div
             key={i}
+            initial={{ scale: 0, opacity: 0, backgroundColor: DOT_COLORS["dim"] }}
             animate={{
               scale: dot.visible ? 1 : 0,
               opacity: dot.visible ? 1 : 0,
               backgroundColor: DOT_COLORS[dot.color],
             }}
-            initial={{ scale: 0, opacity: 0 }}
             transition={{
               scale: { duration: 0.14, ease: "backOut" },
               opacity: { duration: 0.14 },
-              backgroundColor: { duration: 0.25 },
+              backgroundColor: { duration: 0.3 },
             }}
             style={{
               width: "clamp(16px, 4vw, 28px)",
               height: "clamp(16px, 4vw, 28px)",
               borderRadius: "50%",
-              backgroundColor: DOT_COLORS[dot.color],
             }}
           />
         ))}
       </div>
 
-      {/* Text area */}
+      {/* Text */}
       <div
         style={{ minHeight: "clamp(5rem, 12vh, 8rem)" }}
         className="flex flex-col items-center justify-center"
