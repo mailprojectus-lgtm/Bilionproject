@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const STEPS = [
+interface Step {
+  type: string;
+  lines: string[];
+  sub: string | null;
+  items?: string[];
+}
+
+const STEPS: Step[] = [
   {
     type: "question",
     lines: ["So why are you reading this?"],
@@ -75,15 +82,8 @@ export default function TheAskScene() {
               </p>
             )}
 
-            {/* Extra */}
-            {"extra" in current && current.extra && (
-              <p className="text-white/50 text-base md:text-lg font-light mt-4">
-                {current.extra}
-              </p>
-            )}
-
             {/* Items — centered */}
-            {"items" in current && current.items && (
+            {current.items && (
               <div className="mt-6 space-y-3 text-center">
                 {(current.items as string[]).map((item, i) => (
                   <motion.p
